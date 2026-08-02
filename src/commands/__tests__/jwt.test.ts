@@ -88,4 +88,68 @@ describe('jwt', () => {
     const output = spy.mock.calls.flatMap((c) => c).join(' ')
     expect(output).toContain('Signature valid')
   })
+
+  // ── encode subcommand ────────────────────────────────────────────────
+
+  it('should encode an unsigned token from JSON payload', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    jwt(['encode', '{"name":"John"}', '--no-sign'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    const token = output.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\./)?.[0]
+    expect(token).toBeDefined()
+    const parts = (token ?? '').split('.')
+    expect(JSON.parse(Buffer.from(parts[1]!, 'base64url').toString())).toEqual({ name: 'John' })
+    expect(parts[2]).toBe('')
+  })
+
+  it('should encode a signed token with --secret', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    jwt(['encode', '{"sub":"123"}', '--secret', 'mysecret'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    const token = output.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/)?.[0]
+    expect(token).toBeDefined()
+    const tokenStr = token!
+    const parts = tokenStr.split('.')
+    // Signature must be non-empty and verifiable
+    const sig = createHmac('sha256', 'mysecret').update(`${parts[0]}.${parts[1]}`).digest('base64url')
+    expect(parts[2]).toBe(sig)
+  })
+
+  it('should encode from key=value pairs', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    jwt(['encode', 'name=John', 'role=admin', '--no-sign'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    const token = output.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\./)?.[0]
+    const payload = JSON.parse(Buffer.from((token ?? '').split('.')[1]!, 'base64url').toString())
+    expect(payload).toEqual({ name: 'John', role: 'admin' })
+  })
+
+  it('should add exp claim with --exp', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const before = Math.floor(Date.now() / 1000)
+    jwt(['encode', '{"sub":"1"}', '--exp', '3600', '--no-sign'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    const token = output.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\./)?.[0]
+    const payload = JSON.parse(Buffer.from((token ?? '').split('.')[1]!, 'base64url').toString())
+    expect(payload.exp).toBeGreaterThanOrEqual(before + 3600)
+    expect(payload.exp).toBeLessThanOrEqual(before + 3601)
+  })
+
+  it('should support --json output for encode', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    jwt(['encode', '{"name":"John"}', '--secret', 's', '--json'])
+    const parsed = JSON.parse(spy.mock.calls[0][0] as string)
+    expect(parsed.signed).toBe(true)
+    expect(parsed.algorithm).toBe('HS256')
+    expect(parsed.token.split('.')).toHaveLength(3)
+    expect(parsed.payload).toEqual({ name: 'John' })
+  })
+
+  it('should exit on empty payload for encode', () => {
+    expect(() => jwt(['encode'])).toThrow(ExitError)
+  })
+
+  it('should exit on unsupported encode algorithm', () => {
+    expect(() => jwt(['encode', '{"a":1}', '--secret', 's', '--algo', 'HS999'])).toThrow(ExitError)
+  })
 })

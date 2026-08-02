@@ -66,7 +66,49 @@ describe('hash', () => {
   })
 
   it('should exit on unsupported algorithm', () => {
-    expect(() => hash(['hello', '--algo', 'md5'])).toThrow(ExitError)
+    expect(() => hash(['hello', '--algo', 'sha999'])).toThrow(ExitError)
+  })
+
+  it('should compute md5 with --algo md5', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    hash(['hello', '--algo', 'md5'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('MD5')
+    expect(output).toContain('5d41402abc4b2a76b9719d911017c592')
+  })
+
+  it('should compute crc32', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    hash(['hello', '--algo', 'crc32'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('CRC32')
+    expect(output).toContain('3610a686')
+  })
+
+  it('should compute sha3-256', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    hash(['hello', '--algo', 'sha3-256'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('SHA3-256')
+    expect(output).toContain('3338be694f50c5f338814986cdf0686453a888b84f424d792af4b9202398f392')
+  })
+
+  it('should output base64 with --format base64', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    hash(['hello', '--format', 'base64'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ=')
+  })
+
+  it('should output base64url with --format base64url', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    hash(['hello', '--format', 'base64url'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('LPJNul-wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ')
+  })
+
+  it('should reject crc32 with HMAC key', () => {
+    expect(() => hash(['hello', '--algo', 'crc32', '--key', 'secret'])).toThrow(ExitError)
   })
 
   it('should exit on missing input', () => {

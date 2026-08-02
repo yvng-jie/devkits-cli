@@ -1,6 +1,6 @@
 {
   "name": "devkits",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "packageManager": "pnpm@11.1.2",
   "description": "Handy developer tools for your terminal — uuid, base64, jwt, color, hash & more",
   "type": "module",

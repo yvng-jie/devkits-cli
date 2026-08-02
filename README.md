@@ -100,8 +100,8 @@ dt uuid --help        # Same as above
 
 | Command | Alias | Description                                                           |
 | ------- | ----- | --------------------------------------------------------------------- |
-| `jwt`   | —     | Decode JWT tokens with expiry detection & HMAC signature verification |
-| `hash`  | —     | Generate SHA hashes (sha1/256/384/512) & HMAC                         |
+| `jwt`   | —     | Decode or encode JWT tokens with expiry detection & HMAC verification |
+| `hash`  | —     | Generate hashes (SHA family, MD5, BLAKE2, CRC32) & HMAC               |
 
 #### Encoding
 
@@ -127,6 +127,8 @@ dt uuid --help        # Same as above
 | `csv`   | —     | Format and view CSV data             |
 | `ascii` | —     | ASCII / character lookup table       |
 | `case`  | —     | Convert strings between casing formats |
+| `regex` | —     | Test regex patterns & show matches with capture groups |
+| `text`  | —     | Text stats & transformations (wc, reverse, slug, word frequency) |
 
 #### Utilities
 
@@ -142,6 +144,7 @@ dt uuid --help        # Same as above
 | `cron`      | —      | Parse and describe cron expressions            |
 | `lorem`     | —      | Generate Lorem ipsum placeholder text          |
 | `semver`    | `sv`   | Parse, validate, compare, and bump semver      |
+| `fake`      | —      | Generate fake data (names, emails, IPs, companies & more) |
 
 #### Mathematics
 
@@ -181,12 +184,15 @@ dt color coral --json           # → {"hex":"#FF7F50","rgb":"rgb(255,127,80)","
 dt color "#ff7f5080"             # RGBA with alpha
 ```
 
-#### JWT Decode
+#### JWT
 
 ```bash
 dt jwt "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"
 dt jwt <token> --json           # → {"header":{...},"payload":{...},"expired":true/false}
 dt jwt <token> --verify secret  # Verify HMAC signature
+dt jwt encode '{"name":"John"}' --secret mysecret   # Create a signed token
+dt jwt encode name=John role=admin --exp 3600         # key=value payload + expiry
+dt jwt encode '{"sub":"123"}' --no-sign             # Unsigned token
 ```
 
 #### Hash
@@ -195,6 +201,9 @@ dt jwt <token> --verify secret  # Verify HMAC signature
 dt hash "hello"
 dt hash "hello" --algo sha512
 dt hash "hello" -a sha512       # Same as --algo sha512
+dt hash "hello" --algo md5
+dt hash "hello" --algo crc32
+dt hash "hello" --algo sha3-256 --format base64
 echo "hello" | dt hash
 dt hash "hello" --json          # → {"algorithm":"SHA256","input":"hello","hash":"2cf2..."}
 dt hash --file config.json       # Hash file contents
@@ -237,6 +246,36 @@ dt random password                    # 16-char password
 dt random password -l 32 --no-symbols # 32-char alphanumeric
 dt random number --min 1 --max 10     # Random integer
 dt random password -c 5               # 5 passwords at once
+```
+
+#### Regex
+
+```bash
+dt regex "\\d+" "order 42 item 7" --flags g   # Show all matches
+dt regex "(\\w+)@(\\w+)" "a@b.com c@d.io"   # Capture groups
+dt regex "\\s+" "a  b   c" --replace "-"     # Preview replacement
+echo "abc123" | dt regex "[a-z]+" --flags g --json
+```
+
+#### Text
+
+```bash
+dt text "hello world"              # Stats: words, chars, lines, bytes…
+cat file.txt | dt text             # wc-style counting via pipe
+dt text "My Project Name" --slug   # → my-project-name
+dt text "hello world" --reverse    # → dlrow olleh
+dt text "foo bar foo" --freq       # Word frequency table
+dt text "b\na\nc" --sort --unique   # Line operations
+```
+
+#### Fake Data
+
+```bash
+dt fake name                        # Random full name
+dt fake email                       # Random email address
+dt fake -c 5 ip                     # 5 random IPs
+dt fake integer --min 1 --max 10    # Random integer
+dt fake password --json             # JSON output
 ```
 
 #### URL

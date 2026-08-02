@@ -23,6 +23,9 @@ import { loremCommand } from './lorem.js'
 import { cronCommand } from './cron.js'
 import { completionCommand } from './completion.js'
 import { semverCommand } from './semver.js'
+import { regexCommand } from './regex.js'
+import { fakeCommand } from './fake.js'
+import { textCommand } from './text.js'
 import type { Command } from './types.js'
 
 export const commands: Command[] = [
@@ -51,6 +54,9 @@ export const commands: Command[] = [
   cronCommand,
   completionCommand,
   semverCommand,
+  regexCommand,
+  fakeCommand,
+  textCommand,
 ]
 
 // export function findCommand(name: string): Command | undefined {

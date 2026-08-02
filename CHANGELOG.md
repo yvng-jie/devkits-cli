@@ -19,9 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 - `ip` command: add `Accept: application/json` header for Node.js fetch compatibility
 
-## [Unreleased]
+## [0.7.0] - 2026-08-02
 
 ### Added
+- `dt regex` — regex tester with capture groups, named groups, flags, replacement preview, and `--json` output
+- `dt fake` — fake data generator (names, emails, phones, IPs, UUIDs, companies, jobs & more) with `--count`, `--min`/`--max`, `--json`
+- `dt text` — text statistics (words/chars/lines/bytes/unique words) & transformations (`--reverse`, `--truncate`, `--sort`, `--unique`, `--shuffle`, `--wrap`, `--slug`, `--freq`)
+- `dt hash`: added md5, sha3-256/384/512, blake2b512, blake2s256, ripemd160, crc32 algorithms
+- `dt hash --format` — hex (default), base64, base64url output formats
+- `dt jwt encode` — create signed (HS256/384/512) or unsigned tokens from JSON or key=value payloads, with `--exp` expiry claim
 - `dt bytes` — byte size converter (B, KB, MB, GB, TB, PB) with `--si` and `--to` flags (#8)
 - `dt number` — number base converter between decimal, hex, binary, octal (#9)
 - `dt ascii` — ASCII / character lookup table with `--range` and `--extended` flags (#10)
