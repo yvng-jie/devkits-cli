@@ -1,6 +1,7 @@
 import { createInterface } from 'node:readline'
 import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
+import { readStdinSync } from '../utils.js'
 import { createHelp } from '../help-builder.js'
 import { parseCommonFlags } from '../parse-flags.js'
 import { ask, isBack, pauseWithCopy, captureOutput } from '../interactive-utils.js'
@@ -238,7 +239,7 @@ export function color(args: string[]) {
     }
   }
 
-  const raw = inputRest.join(' ').trim()
+  const raw = inputRest.join(' ').trim() || readStdinSync() || ''
   if (!raw) {
     exitWithError('provide a color value')
   }
@@ -321,7 +322,7 @@ export function color(args: string[]) {
 const colorHelp = createHelp({
   name: 'color',
   description: 'Convert colors & generate palettes (HEX / RGB / HSL / named)',
-  usage: 'dt color <value> [options]',
+  usage: 'dt color <value> [options]\n    echo coral | dt color',
   options: [
     { flags: '--json', desc: 'Output as JSON' },
     { flags: '--lower', desc: 'Output lowercase hex' },
@@ -342,6 +343,7 @@ const colorHelp = createHelp({
   examples: [
     { cmd: 'dt color #ff7f50' },
     { cmd: 'dt color coral' },
+    { cmd: 'echo coral | dt color --json' },
     { cmd: 'dt color "#ff7f50" --palette complementary' },
     { cmd: 'dt color "#ff7f50" --palette triadic' },
     { cmd: 'dt color "#ff7f50" --palette analogous --count 5' },

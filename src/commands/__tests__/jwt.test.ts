@@ -3,8 +3,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { jwt } from '../jwt.js'
 import { ExitError } from '../../errors.js'
 
+const mockReadStdinSync = vi.hoisted(() => vi.fn())
+vi.mock('../../utils.js', () => ({
+  readStdinSync: mockReadStdinSync,
+}))
+
 beforeEach(() => {
   vi.restoreAllMocks()
+  mockReadStdinSync.mockReset()
 })
 
 describe('jwt', () => {
@@ -151,5 +157,20 @@ describe('jwt', () => {
 
   it('should exit on unsupported encode algorithm', () => {
     expect(() => jwt(['encode', '{"a":1}', '--secret', 's', '--algo', 'HS999'])).toThrow(ExitError)
+  })
+
+  describe('stdin', () => {
+    it('should decode a token piped through stdin', () => {
+      mockReadStdinSync.mockReturnValue('eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx')
+      const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      jwt([])
+      const out = spy.mock.calls.flatMap((c) => c).join(' ')
+      expect(out).toContain('John')
+    })
+
+    it('should still fail when both argument and stdin are empty', () => {
+      mockReadStdinSync.mockReturnValue('')
+      expect(() => jwt([])).toThrow(ExitError)
+    })
   })
 })

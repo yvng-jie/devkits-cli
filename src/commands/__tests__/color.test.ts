@@ -2,8 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { color } from '../color.js'
 import { ExitError } from '../../errors.js'
 
+const mockReadStdinSync = vi.hoisted(() => vi.fn())
+vi.mock('../../utils.js', () => ({
+  readStdinSync: mockReadStdinSync,
+}))
+
 beforeEach(() => {
   vi.restoreAllMocks()
+  mockReadStdinSync.mockReset()
 })
 
 describe('color', () => {
@@ -128,5 +134,28 @@ describe('color', () => {
     const output = spy.mock.calls.flatMap((c) => c).join(' ')
     const parsed = JSON.parse(output)
     expect(parsed.hex).toBe('#ff7f50')
+  })
+
+  describe('stdin', () => {
+    it('should read a color value from stdin', () => {
+      mockReadStdinSync.mockReturnValue('coral')
+      const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      color([])
+      expect(spy.mock.calls.flatMap((c) => c).join(' ')).toContain('FF7F50')
+    })
+
+    it('should prefer an argument over stdin', () => {
+      mockReadStdinSync.mockReturnValue('coral')
+      const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      color(['#000000'])
+      const out = spy.mock.calls.flatMap((c) => c).join(' ')
+      expect(out).toContain('000000')
+      expect(mockReadStdinSync).not.toHaveBeenCalled()
+    })
+
+    it('should still fail when both argument and stdin are empty', () => {
+      mockReadStdinSync.mockReturnValue('')
+      expect(() => color([])).toThrow(ExitError)
+    })
   })
 })
