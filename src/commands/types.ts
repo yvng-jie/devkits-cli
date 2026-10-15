@@ -1,13 +1,6 @@
 import type { Interface } from 'node:readline'
 
-export type CommandCategory =
-  | 'crypto'
-  | 'encoding'
-  | 'network'
-  | 'data'
-  | 'utility'
-  | 'math'
-  | 'media'
+export type CommandCategory = 'crypto' | 'encoding' | 'utility'
 
 export interface Command {
   name: string

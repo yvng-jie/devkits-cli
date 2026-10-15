@@ -14,14 +14,10 @@ interface CategoryInfo {
 const CATEGORIES: Record<CommandCategory, CategoryInfo> = {
   crypto: { label: 'Security & Crypto', icon: '\u{1F6E1}\uFE0F', color: (s) => chalk.hex('#FF6B6B')(s) },
   encoding: { label: 'Encoding', icon: '\u{1F524}', color: (s) => chalk.hex('#4ECDC4')(s) },
-  network: { label: 'Network', icon: '\u{1F310}', color: (s) => chalk.hex('#45B7D1')(s) },
-  data: { label: 'Data Processing', icon: '\u{1F4CB}', color: (s) => chalk.hex('#96CEB4')(s) },
   utility: { label: 'Utilities', icon: '\u{1F9F0}', color: (s) => chalk.hex('#FFD93D')(s) },
-  math: { label: 'Mathematics', icon: '\u{1F522}', color: (s) => chalk.hex('#DDA0DD')(s) },
-  media: { label: 'Media', icon: '\u{1F5BC}\uFE0F', color: (s) => chalk.hex('#87CEEB')(s) },
 }
 
-const CATEGORY_ORDER: CommandCategory[] = ['crypto', 'encoding', 'network', 'data', 'utility', 'math', 'media']
+const CATEGORY_ORDER: CommandCategory[] = ['crypto', 'encoding', 'utility']
 
 // ── Get commands in display order (grouped by category) ────────
 function getCommandsInDisplayOrder(): Command[] {
@@ -77,17 +73,54 @@ async function runCommand(cmdName: string, rl: ReturnType<typeof createInterface
 }
 
 // ── Interactive main loop ──────────────────────────────────────
+/**
+ * Display width of a string in terminal cells.
+ *
+ * Emoji and CJK characters occupy two cells but count as one code point, so a
+ * plain `.length` calculation misaligns box borders. Wide ranges are handled
+ * explicitly; ANSI escapes are ignored.
+ */
+function displayWidth(s: string): number {
+  let width = 0
+  // eslint-disable-next-line no-control-regex
+  for (const ch of s.replace(/\u001B\[[0-9;]*m/g, '')) {
+    const cp = ch.codePointAt(0) ?? 0
+    const isWide =
+      (cp >= 0x1f300 && cp <= 0x1faff) || // emoji & pictographs
+      (cp >= 0x1f000 && cp <= 0x1f2ff) ||
+      (cp >= 0x2600 && cp <= 0x27bf) || // misc symbols & dingbats
+      (cp >= 0x1100 && cp <= 0x115f) || // Hangul Jamo
+      (cp >= 0x2e80 && cp <= 0xa4cf) || // CJK
+      (cp >= 0xac00 && cp <= 0xd7a3) || // Hangul syllables
+      (cp >= 0xf900 && cp <= 0xfaff) ||
+      (cp >= 0xfe30 && cp <= 0xfe6f) ||
+      (cp >= 0xff00 && cp <= 0xff60) || // fullwidth forms
+      (cp >= 0xffe0 && cp <= 0xffe6)
+    // Variation selectors and zero-width joiners add no width
+    if (cp === 0xfe0f || cp === 0x200d) continue
+    width += isWide ? 2 : 1
+  }
+  return width
+}
+
+/** Render a bordered title box whose top, middle and bottom borders align. */
+function renderTitleBox(title: string): string[] {
+  const inner = displayWidth(title) + 6 // 3 cells of padding on each side
+  const TOP = `\u250C${'\u2500'.repeat(inner)}\u2510`
+  const BOTTOM = `\u2514${'\u2500'.repeat(inner)}\u2518`
+  const padding = ' '.repeat(3)
+  return [
+    `  ${chalk.bold.cyan(TOP)}`,
+    `  ${chalk.bold.cyan('\u2502')}${padding}${chalk.bold(title)}${padding}${chalk.bold.cyan('\u2502')}`,
+    `  ${chalk.bold.cyan(BOTTOM)}`,
+  ]
+}
+
 export async function interactive() {
   console.log('')
-  console.log(
-    `  ${chalk.bold.cyan('\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510')}`,
-  )
-  console.log(
-    `  ${chalk.bold.cyan('\u2502')}       ${chalk.bold('\uD83D\uDD27 DT \u2014 Developer Toolkit')}    ${chalk.bold.cyan('\u2502')}`,
-  )
-  console.log(
-    `  ${chalk.bold.cyan('\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518')}`,
-  )
+  for (const line of renderTitleBox('\uD83D\uDD27 dt')) {
+    console.log(line)
+  }
   console.log('')
 
   const rl = createInterface({ input: process.stdin, output: process.stdout })
