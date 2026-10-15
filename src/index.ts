@@ -54,6 +54,11 @@ async function main() {
 
 main().catch((err) => {
   if (err instanceof ExitError) {
+    // Command-level errors already printed their own message via exitWithError();
+    // the router-level error (unknown command) still needs to be shown here.
+    if (!/^Error:/.test(err.message)) {
+      console.log(`\n  ${err.message}\n`)
+    }
     process.exit(1)
   }
   console.error('Fatal error:', err)
