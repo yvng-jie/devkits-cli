@@ -128,3 +128,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 - Initial CLI skeleton with help system
 - Project setup with TypeScript, tsup, eslint
+
+## [1.0.0] - 2026-10-15
+
+The project was renamed and deliberately reduced in scope. See the migration
+section in the README for upgrade instructions.
+
+### Changed
+
+- **Renamed** the npm package from `devkits` to `devkits-cli`, and the GitHub
+  repository from `devtools-cli` to `devkits-cli`. The `dt` command keeps
+  working unchanged as a short alias for `devkits-cli`; both binaries are
+  installed by the package.
+- **Repositioned** the project around offline operation: every command now runs
+  without network access, and the README leads with that guarantee.
+- `help` output and the ASCII banner were redrawn for the new name, and now
+  state that all commands work offline, read stdin and support `--json`.
+- Shell completion scripts are now **generated from the command registry**
+  instead of being hand-maintained, so they can no longer drift from the set of
+  real commands. The generator also registers completion for both `devkits-cli`
+  and `dt`.
+- The command registry moved to `src/registry.ts` and is now the single source
+  of truth for help, interactive mode and completion.
+
+### Removed
+
+- **20 commands** that duplicated tooling already present on a typical system:
+  `math`, `fake`, `csv`, `text`, `semver`, `image`, `ascii`, `json`, `regex`,
+  `lorem`, `case`, `diff`, `ip`, `qrcode`, `mac`, `random`, `number`, `uuid`,
+  `bytes`, `cidr`.
+- The `qrcode` runtime dependency — `chalk` is now the only runtime dependency.
+- The `ip` command was the only command making network requests; removing it
+  makes the "never leaves your terminal" guarantee absolute.
+- Removed commands are preserved in git at the `legacy/v0.7.0-28cmds` tag.
+
+### Fixed
+
+- `cron`: `*/15 * * * *` and every other `*/step` expression were rejected as
+  invalid, even though they appear in the command's own help text.
+- `cron`: out-of-range values such as `99 99 99 99 99` or `0 24 * * *` were
+  accepted as valid.
+- `cron`: `--next` swallowed the following flag, so `--next --json` silently
+  produced no JSON.
+- Unknown commands exited with status 1 but printed no error message.
+- `completion`: importing the registry created a cycle that left the registry
+  with a `null` entry under some module load orders.
+
+### Added
+
+- Unit tests for `cron` and `completion` — previously the only commands in the
+  project without any test coverage.
+- `CONTRIBUTING.md`: an explicit command admission checklist (offline, stdin,
+  `--json`, tests, justification) to keep the scope from drifting back out.

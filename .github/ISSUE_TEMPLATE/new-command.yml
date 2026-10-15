@@ -1,22 +1,25 @@
 name: '✨ New command'
-description: Suggest or request a new CLI command for dt
-title: '[Feature] `dt <command>` — '
-labels: ['enhancement', 'good first issue']
+description: Propose a new CLI command for devkits-cli (read the admission checklist first)
+title: '[Feature] `devkits-cli <command>` — '
+labels: ['enhancement']
 assignees: []
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for suggesting a new command! After this issue is created, see
-        [CONTRIBUTING.md](https://github.com/yvng-jie/devtools-cli/blob/main/CONTRIBUTING.md)
-        for a step-by-step implementation guide.
+        Thanks for suggesting a new command! Before you continue, please read the
+        [command admission checklist](https://github.com/yvng-jie/devkits-cli/blob/main/CONTRIBUTING.md#command-admission-checklist).
+
+        This project deliberately stays small. A command that duplicates `jq`, `uuidgen`,
+        `date`, `shasum`, `bc` or `exiftool`, or that needs network access, will be declined.
+        That is not a judgement on the idea — it is what keeps the tool trustworthy.
 
   - type: input
     id: command_name
     attributes:
       label: Command name
       description: What should the command be called?
-      placeholder: e.g. url, password, case, ip
+      placeholder: e.g. hmac, password-strength, keygen
     validations:
       required: true
 
@@ -25,7 +28,20 @@ body:
     attributes:
       label: Description
       description: What does this command do?
-      placeholder: e.g. Encode or decode URL strings
+      placeholder: e.g. Verify a JWT signature without leaving the terminal
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Why existing alternatives are not enough
+      description: |
+        Which offline tool or OS built-in solves this today (`jq`, `uuidgen`, `date`,
+        `shasum`, `openssl`, …), and why is it insufficient for a privacy-sensitive workflow?
+      placeholder: |
+        `openssl` can do this, but the incantation is long enough that people paste
+        secrets into web tools instead. This makes the safe path the easy path.
     validations:
       required: true
 
@@ -35,10 +51,9 @@ body:
       label: Usage examples
       description: Show how the command should work
       placeholder: |
-        dt url encode "hello world"
-        dt url decode "hello%20world"
-        echo "hello" | dt url encode
-        dt url encode "hello" --json
+        devkits-cli hmac "message" --key secret
+        devkits-cli hmac --key secret < file.txt
+        devkits-cli hmac "message" --key secret --json
       render: bash
     validations:
       required: true
@@ -49,35 +64,36 @@ body:
       label: Options / Flags (optional)
       description: Any flags the command should support?
       placeholder: |
-        --length, -l    Password length (default: 16)
-        --count, -c     Number of items (default: 1)
-        --no-symbols    Exclude special characters
+        --algo, -a      Hash algorithm (default: sha256)
+        --key, -k       HMAC key
+        --json          JSON output
       render: text
 
   - type: dropdown
-    id: interactive
+    id: category
     attributes:
-      label: Interactive mode prompts
-      description: Does this command need custom prompts in interactive mode?
+      label: Category
+      description: Which group should this command appear under in `devkits-cli help`?
       options:
-        - 'No — just pass arguments directly'
-        - 'Yes — needs custom prompts (describe above)'
+        - 'crypto — Security & Crypto'
+        - 'encoding — Encoding'
+        - 'utility — Utilities'
     validations:
       required: true
 
   - type: checkboxes
     id: checklist
     attributes:
-      label: Implementation checklist
-      description: All new commands should support these
+      label: Admission checklist
+      description: All of these are required for a new command to be accepted
       options:
-        - label: CLI mode (`dt <command> <args>`)
+        - label: Works fully offline — no network calls
           required: true
-        - label: Help text (`dt <command> --help`)
+        - label: Supports `--json` with a stable shape
           required: true
-        - label: JSON output (`--json` flag)
+        - label: Reads piped stdin when no argument is given
           required: true
-        - label: Pipe support (`echo x | dt <command>`)
-          required: false
-        - label: Unit tests
+        - label: Ships with unit tests
+          required: true
+        - label: Adds flag metadata to `FLAGS` in `src/commands/completion.ts`
           required: true

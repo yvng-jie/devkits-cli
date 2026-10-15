@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: 📖 Documentation
-    url: https://github.com/yvng-jie/devtools-cli/blob/main/README.md
+    url: https://github.com/yvng-jie/devkits-cli/blob/main/README.md
     about: Check the README first for usage and examples
   - name: 🤔 Discussion
-    url: https://github.com/yvng-jie/devtools-cli/discussions
+    url: https://github.com/yvng-jie/devkits-cli/discussions
     about: Ask questions and discuss ideas

@@ -1,14 +1,16 @@
 {
   "name": "devkits-cli",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "packageManager": "pnpm@11.1.2",
-  "description": "Handy developer tools for your terminal — uuid, base64, jwt, color, hash & more",
+  "description": "Developer tools that never leave your terminal — decode JWTs, hash, Base64, colors and cron. Offline, pipe-friendly, --json everywhere.",
   "type": "module",
   "bin": {
+    "devkits-cli": "./dist/index.js",
     "dt": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "scripts": {
     "prepublishOnly": "pnpm build",
@@ -20,21 +22,31 @@
   },
   "keywords": [
     "cli",
-    "devtools",
-    "uuid",
-    "base64",
+    "dt",
+    "dt-cli",
+    "devkits",
     "jwt",
-    "color-converter",
+    "jwt-decode",
+    "jwt-verify",
     "hash",
+    "hmac",
+    "base64",
+    "color-converter",
+    "cron",
+    "timestamp",
+    "offline",
+    "privacy",
+    "no-network",
+    "developer-tools",
     "terminal"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yvng-jie/devtools-cli"
+    "url": "https://github.com/yvng-jie/devkits-cli"
   },
-  "homepage": "https://github.com/yvng-jie/devtools-cli#readme",
+  "homepage": "https://github.com/yvng-jie/devkits-cli#readme",
   "bugs": {
-    "url": "https://github.com/yvng-jie/devtools-cli/issues"
+    "url": "https://github.com/yvng-jie/devkits-cli/issues"
   },
   "license": "MIT",
   "author": "yangfree",

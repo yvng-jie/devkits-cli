@@ -16,7 +16,7 @@ Steps to reproduce the behavior:
 
 ```bash
 # Command that caused the bug
-dt <command>
+devkits-cli <command>
 ```
 
 ## Expected behavior
@@ -31,8 +31,8 @@ What actually happened (include error output, unexpected results, etc.).
 
 - OS: [e.g. macOS 14, Ubuntu 22.04]
 - Node version: `node --version`
-- Package version: `dt --version` (or `npx devkits --version`)
-- Installation method: `npm install -g devkits` / `npx devkits` / other
+- Package version: `devkits-cli --version` (or `npx devkits-cli --version`)
+- Installation method: `npm install -g devkits-cli` / `npx devkits-cli` / other
 
 ## Additional context
 
