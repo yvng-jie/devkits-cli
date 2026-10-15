@@ -1,6 +1,7 @@
 import { createInterface } from 'node:readline'
 import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
+import { readStdinSync } from '../utils.js'
 import { createHelp } from '../help-builder.js'
 import { parseCommonFlags } from '../parse-flags.js'
 import { ask, isBack, pauseWithCopy, captureOutput } from '../interactive-utils.js'
@@ -128,22 +129,70 @@ function describe(expr: string): string {
   return descriptions.join(', ')
 }
 
+/** Value range for each of the five fields, in order. */
+const FIELD_RANGES: readonly [number, number][] = [
+  [0, 59], // minute
+  [0, 23], // hour
+  [1, 31], // day of month
+  [1, 12], // month
+  [0, 7], // day of week (0 and 7 are both Sunday)
+]
+
+/**
+ * Validate a single cron field.
+ *
+ * Accepts every form real cron accepts:
+ *   *           any value
+ *   *\/15        every 15th value (step on a wildcard)
+ *   5           exact value
+ *   5/10        step from an explicit start
+ *   1-10        range
+ *   1-10/2      range with step
+ *   MON-FRI     named ranges (months / days)
+ *   MON,WED,FRI comma-separated lists of any of the above
+ */
+function isValidField(val: string, index: number): boolean {
+  const [min, max] = FIELD_RANGES[index] ?? [0, 59]
+
+  for (const item of val.split(',')) {
+    if (item === '') return false
+
+    const [base, step, ...rest] = item.split('/')
+    if (rest.length > 0) return false // at most one step
+    if (step !== undefined && !/^\d+$/.test(step)) return false
+    if (base === undefined) return false
+
+    if (base === '*') continue // wildcard, optionally stepped
+
+    if (/^\d+$/.test(base)) {
+      const n = Number(base)
+      if (n < min || n > max) return false
+      continue
+    }
+
+    if (/^\d+-\d+$/.test(base)) {
+      const [from, to] = base.split('-').map(Number) as [number, number]
+      if (from < min || from > max || to < min || to > max) return false
+      continue
+    }
+
+    // Named months (field 3) and weekdays (field 4)
+    if (index === 3 || index === 4) {
+      const names = index === 3 ? MONTH_NAMES : DAY_NAMES
+      const [from, to] = base.toUpperCase().split('-')
+      if (from && names[from] && (to === undefined || names[to])) continue
+    }
+
+    return false
+  }
+  return true
+}
+
 function validateExpr(expr: string): boolean {
   if (SPECIAL[expr.toLowerCase()]) return true
   const parts = expr.trim().split(/\s+/)
   if (parts.length !== 5) return false
-  for (let i = 0; i < 5; i++) {
-    const val = parts[i]!
-    // Basic validation: allow *, numbers, ranges, steps, lists
-    if (!/^(\*|\d+(-\d+)?(\/\d+)?)(,(\d+(-\d+)?(\/\d+)?))*$/.test(val) &&
-        !/^[A-Za-z]{3}(-[A-Za-z]{3})?$/.test(val)) {
-      // Check for valid names
-      if (i === 3 && !MONTH_NAMES[val.toUpperCase()] && !val.match(/^[A-Za-z]{3}(-[A-Za-z]{3})?$/)) return false
-      if (i === 4 && !DAY_NAMES[val.toUpperCase()] && !val.match(/^[A-Za-z]{3}(-[A-Za-z]{3})?$/)) return false
-      if (i < 3) return false
-    }
-  }
-  return true
+  return parts.every((val, i) => isValidField(val, i))
 }
 
 function computeNext(expr: string, count: number): string[] {
@@ -231,8 +280,15 @@ export function cron(args: string[]) {
   const inputArgs: string[] = []
   for (let i = 0; i < rest.length; i++) {
     if (rest[i] === '--next') {
-      nextCount = Number(rest[i + 1]) || 5
-      i++
+      // Only consume the following token when it is actually a number, so that
+      // `--next --json` does not swallow the flag.
+      const candidate = rest[i + 1]
+      if (candidate !== undefined && /^\d+$/.test(candidate)) {
+        nextCount = Number(candidate)
+        i++
+      } else {
+        nextCount = 5
+      }
     } else if (rest[i] === '--validate') {
       validateOnly = true
     } else {
@@ -240,7 +296,7 @@ export function cron(args: string[]) {
     }
   }
 
-  const expression = inputArgs.join(' ')?.trim()
+  const expression = inputArgs.join(' ').trim() || readStdinSync() || ''
   if (!expression) {
     exitWithError('provide a cron expression (e.g. "*/15 * * * *")')
   }
@@ -289,7 +345,7 @@ export function cron(args: string[]) {
 const cronHelp = createHelp({
   name: 'cron',
   description: 'Parse and describe cron expressions',
-  usage: 'dt cron <expression> [options]',
+  usage: 'dt cron <expression> [options]\n    echo "*/15 * * * *" | dt cron',
   options: [
     { flags: '--next <n>', desc: 'Show next N execution times (default: 5)' },
     { flags: '--validate', desc: 'Validate cron expression only' },
@@ -305,6 +361,7 @@ const cronHelp = createHelp({
   ],
   examples: [
     { cmd: 'dt cron "*/15 * * * *"' },
+    { cmd: 'echo "*/15 * * * *" | dt cron --validate' },
     { cmd: 'dt cron "0 9 * * 1-5"' },
     { cmd: 'dt cron "30 4 1 * *"' },
     { cmd: 'dt cron "*/15 * * * *" --next 5' },

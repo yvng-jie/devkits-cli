@@ -19,7 +19,10 @@ export function createHelp(opts: HelpOptions): () => void {
     console.log(`  ${chalk.dim('─'.repeat(opts.name.length + 2))}`)
     console.log('')
     console.log(`  ${chalk.yellow('Usage:')}`)
-    console.log(`    ${opts.usage}`)
+    // A usage string may contain several lines; indent each of them.
+    for (const line of opts.usage.split('\n')) {
+      console.log(`    ${line.trim()}`)
+    }
     console.log('')
 
     if (opts.options && opts.options.length > 0) {

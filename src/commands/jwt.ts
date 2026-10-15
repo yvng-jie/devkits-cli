@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { createInterface } from 'node:readline'
 import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
+import { readStdinSync } from '../utils.js'
 import { createHelp } from '../help-builder.js'
 import { parseCommonFlags } from '../parse-flags.js'
 import { ask, isBack, pauseWithCopy, captureOutput } from '../interactive-utils.js'
@@ -152,7 +153,8 @@ export function jwt(args: string[]) {
     }
   }
 
-  const input = filteredArgs.join(' ').trim()
+  // `|| ''` keeps this a string even if a test double returns undefined/null.
+  const input = (filteredArgs.join(' ').trim() || readStdinSync() || '').trim()
   if (!input) {
     exitWithError('provide a JWT token')
   }
@@ -240,7 +242,7 @@ export function jwt(args: string[]) {
 const jwtHelp = createHelp({
   name: 'jwt',
   description: 'Decode or encode JWT tokens with expiry detection',
-  usage: 'dt jwt <token> | dt jwt encode <payload> [options]',
+  usage: 'dt jwt <token> [options]\n    dt jwt encode <payload> [options]\n    cat token.txt | dt jwt',
   options: [
     { flags: '--verify, -k <secret>', desc: 'Verify HMAC signature (HS256/384/512)' },
     { flags: 'encode <payload>', desc: 'Create a token from a JSON object or key=value pairs' },
@@ -252,6 +254,8 @@ const jwtHelp = createHelp({
   examples: [
     { cmd: 'dt jwt "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"' },
     { cmd: 'dt jwt <token> --verify mysecret' },
+    { cmd: 'cat token.txt | dt jwt' },
+    { cmd: 'cat token.txt | dt jwt --json' },
     { cmd: 'dt jwt encode \'{"name":"John"}\' --secret mysecret' },
     { cmd: 'dt jwt encode name=John role=admin --exp 3600' },
     { cmd: 'dt jwt encode \'{"sub":"123"}\' --no-sign' },
@@ -282,7 +286,7 @@ export const jwtCommand: Command = {
   name: 'jwt',
   aliases: [],
   category: 'crypto',
-  description: 'Decode a JWT token with expiry detection',
+  description: 'Decode, verify or encode JWT tokens offline',
   run: jwt,
   help: jwtHelp,
   interactive: jwtInteractive,

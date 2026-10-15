@@ -190,7 +190,7 @@ export const hashCommand: Command = {
   name: 'hash',
   aliases: [],
   category: 'crypto',
-  description: 'Generate SHA hashes (sha1/256/384/512)',
+  description: 'Hashes & HMAC (SHA, MD5, BLAKE2, CRC32)',
   run: hash,
   help: hashHelp,
   interactive: hashInteractive,
