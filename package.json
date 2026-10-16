@@ -1,6 +1,6 @@
 {
   "name": "devkits-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packageManager": "pnpm@11.1.2",
   "description": "Developer tools that never leave your terminal — decode JWTs, hash, Base64, colors and cron. Offline, pipe-friendly, --json everywhere.",
   "type": "module",

@@ -180,3 +180,18 @@ section in the README for upgrade instructions.
   project without any test coverage.
 - `CONTRIBUTING.md`: an explicit command admission checklist (offline, stdin,
   `--json`, tests, justification) to keep the scope from drifting back out.
+
+## [1.0.1] - 2026-10-16
+
+Identical code to 1.0.0. Republished because 1.0.0 was still held by the npm
+staged-publishing queue: `npm publish` over a staged version returns
+`E409 Cannot publish over previously staged version`, and the stage id is not
+readable with a token that lacks `read-user` scope. Publishing the next patch
+version cleared the queue — the 2FA prompt that released 1.0.1 also released
+1.0.0, so both versions are live.
+
+### Changed
+
+- Version bumped to 1.0.1 to clear a staged 1.0.0 in the npm registry.
+- `package.json` description restored after a release-tooling script escaped its
+  em dash as `\u2014` (no semantic change, avoids a spurious diff).
